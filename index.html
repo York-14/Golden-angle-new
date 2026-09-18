@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Golden Angle Phyllotaxis — Breathing</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.4/p5.min.js"></script>
+<style>
+  html, body {
+    margin: 0;
+    padding: 0;
+    background: #0a0a0f;
+    color: #e8e8f0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    overflow-x: hidden;
+  }
+  #controls {
+    position: fixed;
+    top: 12px;
+    left: 12px;
+    z-index: 10;
+    background: rgba(20, 20, 30, 0.75);
+    backdrop-filter: blur(6px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
+    padding: 14px 18px;
+    font-size: 13px;
+    line-height: 1.8;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+  }
+  #controls .row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    white-space: nowrap;
+  }
+  #controls label {
+    width: 96px;
+    display: inline-block;
+    color: #b0b0c8;
+  }
+  #controls .val {
+    width: 44px;
+    text-align: right;
+    color: #f0c674;
+    font-variant-numeric: tabular-nums;
+  }
+  #controls input[type="range"] {
+    accent-color: #f0c674;
+  }
+  h1 {
+    position: fixed;
+    bottom: 10px;
+    right: 14px;
+    font-size: 11px;
+    font-weight: 400;
+    color: rgba(255, 255, 255, 0.35);
+    margin: 0;
+    z-index: 10;
+  }
+</style>
+</head>
+<body>
+
+<div id="controls">
+  <div class="row">
+    <label for="elongSlider">elong (花弁の伸び)</label>
+    <input type="range" id="elongSlider" min="1" max="5" step="0.05" value="2.2" />
+    <span class="val" id="elongVal">2.20</span>
+  </div>
+  <div class="row">
+    <label for="aSlider">A (呼吸の振幅)</label>
+    <input type="range" id="aSlider" min="0" max="0.3" step="0.005" value="0.08" />
+    <span class="val" id="aVal">0.080</span>
+  </div>
+  <div class="row">
+    <label for="fSlider">f (呼吸の速さ)</label>
+    <input type="range" id="fSlider" min="0.05" max="1.5" step="0.01" value="0.35" />
+    <span class="val" id="fVal">0.35</span>
+  </div>
+</div>
+
+<h1>golden angle 137.5&deg; phyllotaxis — breathing animation</h1>
+
+<script>
+  const GOLDEN_ANGLE = 137.50776405003785; // degrees
+
+  let numPoints = 400;
+  let spacing = 9;
+
+  let elong = 2.2;
+  let breathAmp = 0.08;
+  let breathFreq = 0.35;
+
+  let elongSlider, aSlider, fSlider;
+  let elongVal, aVal, fVal;
+
+  function setup() {
+    const cnv = createCanvas(windowWidth, windowHeight);
+    cnv.style("display", "block");
+    angleMode(DEGREES);
+    colorMode(HSB, 360, 100, 100, 1);
+    noStroke();
+
+    elongSlider = document.getElementById("elongSlider");
+    aSlider = document.getElementById("aSlider");
+    fSlider = document.getElementById("fSlider");
+    elongVal = document.getElementById("elongVal");
+    aVal = document.getElementById("aVal");
+    fVal = document.getElementById("fVal");
+
+    elong = parseFloat(elongSlider.value);
+    breathAmp = parseFloat(aSlider.value);
+    breathFreq = parseFloat(fSlider.value);
+  }
+
+  function draw() {
+    background(240, 15, 6);
+
+    elong = parseFloat(elongSlider.value);
+    breathAmp = parseFloat(aSlider.value);
+    breathFreq = parseFloat(fSlider.value);
+    elongVal.textContent = elong.toFixed(2);
+    aVal.textContent = breathAmp.toFixed(3);
+    fVal.textContent = breathFreq.toFixed(2);
+
+    const t = millis() / 1000;
+
+    push();
+    translate(width / 2, height / 2);
+
+    for (let i = 0; i < numPoints; i++) {
+      const theta = i * GOLDEN_ANGLE;
+      const r = spacing * sqrt(i);
+
+      // per-petal breathing phase creates a rippling pulse outward from the center
+      const t_anim = 1 + breathAmp * sin(360 * breathFreq * t - i * 2.5);
+
+      const x = r * cos(theta);
+      const y = r * sin(theta);
+
+      const hue = (theta + i * 0.6) % 360;
+      const brightness = map(r, 0, min(width, height) / 2, 45, 95);
+
+      push();
+      translate(x, y);
+      rotate(theta);
+      scale(t_anim);
+
+      const petalLen = spacing * 0.9 * elong;
+      const petalWid = spacing * 0.9;
+
+      fill(hue, 65, brightness, 0.9);
+      ellipse(0, 0, petalLen, petalWid);
+
+      pop();
+    }
+
+    pop();
+  }
+
+  function windowResized() {
+    resizeCanvas(windowWidth, windowHeight);
+  }
+</script>
+
+</body>
+</html>
