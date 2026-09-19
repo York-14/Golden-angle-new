@@ -151,8 +151,12 @@
 
       const t_anim = 1 + breathAmp * sin(360 * breathFreq * t - i * 2.5);
 
-      const hue = (azimuth + i * 0.6 + 360) % 360;
-      const brightness = map(y, -1, 1, 45, 95);
+      // hue sweeps between light blue (195) and pale violet (265),
+      // passing through blue (~230) in between
+      const huePhase = 0.5 + 0.5 * sin(azimuth * 1.5 + y * 120);
+      const hue = 195 + huePhase * 70;
+      const saturation = 50;
+      const brightness = map(y, -1, 1, 55, 95);
 
       push();
       translate(x * sphereRadius, y * sphereRadius, z * sphereRadius);
@@ -161,7 +165,7 @@
       scale(t_anim);
       scale(1, elong, 1);
 
-      fill(hue, 65, brightness, 0.9);
+      fill(hue, saturation, brightness, 0.9);
       sphere(petalSize);
 
       pop();
