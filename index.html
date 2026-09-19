@@ -48,6 +48,21 @@
   #controls input[type="range"] {
     accent-color: #f0c674;
   }
+  #shuffleBtn {
+    margin-top: 10px;
+    width: 100%;
+    padding: 7px 0;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 6px;
+    background: rgba(240, 198, 116, 0.15);
+    color: #f0c674;
+    font-size: 13px;
+    font-family: inherit;
+    cursor: pointer;
+  }
+  #shuffleBtn:hover {
+    background: rgba(240, 198, 116, 0.3);
+  }
   h1 {
     position: fixed;
     bottom: 10px;
@@ -81,6 +96,7 @@
     <input type="range" id="fSlider" min="0.05" max="1.5" step="0.01" value="0.35" />
     <span class="val" id="fVal">0.35</span>
   </div>
+  <button id="shuffleBtn" type="button">🔀 Shuffle</button>
 </div>
 
 <h1>golden angle phyllotaxis — Fibonacci sphere (3D, drag to orbit) · <a href="2d.html">2D版はこちら</a></h1>
@@ -94,8 +110,30 @@
   let breathAmp = 0.08;
   let breathFreq = 0.35;
 
-  let elongSlider, aSlider, fSlider;
+  // randomized by the Shuffle button; not exposed as sliders
+  let hueBase = 195;
+  let hueSpread = 70;
+  let petalSizeRatio = 0.09;
+  let sphereRadiusRatio = 0.32;
+
+  let elongSlider, aSlider, fSlider, shuffleBtn;
   let elongVal, aVal, fVal;
+
+  function randRange(lo, hi) {
+    return lo + Math.random() * (hi - lo);
+  }
+
+  function shuffleParams() {
+    numPoints = Math.round(randRange(200, 500));
+    petalSizeRatio = randRange(0.05, 0.14);
+    sphereRadiusRatio = randRange(0.25, 0.38);
+    hueBase = randRange(0, 360);
+    hueSpread = randRange(40, 110);
+
+    elongSlider.value = randRange(1, 5).toFixed(2);
+    aSlider.value = randRange(0, 0.3).toFixed(3);
+    fSlider.value = randRange(0.05, 1.5).toFixed(2);
+  }
 
   function setup() {
     const cnv = createCanvas(windowWidth, windowHeight, WEBGL);
@@ -110,6 +148,8 @@
     elongVal = document.getElementById("elongVal");
     aVal = document.getElementById("aVal");
     fVal = document.getElementById("fVal");
+    shuffleBtn = document.getElementById("shuffleBtn");
+    shuffleBtn.addEventListener("click", shuffleParams);
 
     elong = parseFloat(elongSlider.value);
     breathAmp = parseFloat(aSlider.value);
@@ -130,8 +170,8 @@
     fVal.textContent = breathFreq.toFixed(2);
 
     const t = millis() / 1000;
-    const sphereRadius = min(width, height) * 0.32;
-    const petalSize = sphereRadius * 0.09;
+    const sphereRadius = min(width, height) * sphereRadiusRatio;
+    const petalSize = sphereRadius * petalSizeRatio;
 
     for (let i = 0; i < numPoints; i++) {
       // Fibonacci sphere: golden angle sweeps azimuth while y steps
@@ -151,10 +191,10 @@
 
       const t_anim = 1 + breathAmp * sin(360 * breathFreq * t - i * 2.5);
 
-      // hue sweeps between light blue (195) and pale violet (265),
-      // passing through blue (~230) in between
+      // hue sweeps across a band starting at hueBase; Shuffle picks a
+      // new base color and spread each time it's pressed
       const huePhase = 0.5 + 0.5 * sin(azimuth * 1.5 + y * 120);
-      const hue = 195 + huePhase * 70;
+      const hue = (hueBase + huePhase * hueSpread) % 360;
       const saturation = 50;
       const brightness = map(y, -1, 1, 55, 95);
 
