@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Golden Angle Phyllotaxis — Breathing (3D)</title>
+<title>Golden Angle Phyllotaxis — Breathing</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.4/p5.min.js"></script>
 <style>
   html, body {
@@ -12,7 +12,7 @@
     background: #0a0a0f;
     color: #e8e8f0;
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-    overflow: hidden;
+    overflow-x: hidden;
   }
   #controls {
     position: fixed;
@@ -58,9 +58,6 @@
     margin: 0;
     z-index: 10;
   }
-  h1 a {
-    color: #f0c674;
-  }
 </style>
 </head>
 <body>
@@ -83,12 +80,13 @@
   </div>
 </div>
 
-<h1>golden angle phyllotaxis — Fibonacci sphere (3D, drag to orbit) · <a href="2d.html">2D版はこちら</a></h1>
+<h1>golden angle 137.5&deg; phyllotaxis — breathing animation (2D) · <a href="index.html" style="color:#f0c674;">3D版はこちら</a></h1>
 
 <script>
   const GOLDEN_ANGLE = 137.50776405003785; // degrees
 
-  let numPoints = 350;
+  let numPoints = 400;
+  let spacing = 9;
 
   let elong = 2.2;
   let breathAmp = 0.08;
@@ -98,7 +96,7 @@
   let elongVal, aVal, fVal;
 
   function setup() {
-    const cnv = createCanvas(windowWidth, windowHeight, WEBGL);
+    const cnv = createCanvas(windowWidth, windowHeight);
     cnv.style("display", "block");
     angleMode(DEGREES);
     colorMode(HSB, 360, 100, 100, 1);
@@ -118,9 +116,6 @@
 
   function draw() {
     background(240, 15, 6);
-    orbitControl(1, 1, 0.1);
-    ambientLight(70);
-    directionalLight(255, 255, 255, 0.4, 0.6, -1);
 
     elong = parseFloat(elongSlider.value);
     breathAmp = parseFloat(aSlider.value);
@@ -130,42 +125,38 @@
     fVal.textContent = breathFreq.toFixed(2);
 
     const t = millis() / 1000;
-    const sphereRadius = min(width, height) * 0.32;
-    const petalSize = sphereRadius * 0.09;
+
+    push();
+    translate(width / 2, height / 2);
 
     for (let i = 0; i < numPoints; i++) {
-      // Fibonacci sphere: golden angle sweeps azimuth while y steps
-      // uniformly from pole to pole, giving an even spiral distribution.
-      const yFrac = 1 - (i / (numPoints - 1)) * 2; // 1 -> -1
-      const ringRadius = sqrt(1 - yFrac * yFrac);
       const theta = i * GOLDEN_ANGLE;
+      const r = spacing * sqrt(i);
 
-      const x = cos(theta) * ringRadius;
-      const y = yFrac;
-      const z = sin(theta) * ringRadius;
-
-      // orientation angles to align each petal's long axis with the
-      // radial direction (x, y, z) from the sphere's center
-      const elevation = acos(y);
-      const azimuth = atan2(x, z);
-
+      // per-petal breathing phase creates a rippling pulse outward from the center
       const t_anim = 1 + breathAmp * sin(360 * breathFreq * t - i * 2.5);
 
-      const hue = (azimuth + i * 0.6 + 360) % 360;
-      const brightness = map(y, -1, 1, 45, 95);
+      const x = r * cos(theta);
+      const y = r * sin(theta);
+
+      const hue = (theta + i * 0.6) % 360;
+      const brightness = map(r, 0, min(width, height) / 2, 45, 95);
 
       push();
-      translate(x * sphereRadius, y * sphereRadius, z * sphereRadius);
-      rotateY(azimuth);
-      rotateX(elevation);
+      translate(x, y);
+      rotate(theta);
       scale(t_anim);
-      scale(1, elong, 1);
+
+      const petalLen = spacing * 0.9 * elong;
+      const petalWid = spacing * 0.9;
 
       fill(hue, 65, brightness, 0.9);
-      sphere(petalSize);
+      ellipse(0, 0, petalLen, petalWid);
 
       pop();
     }
+
+    pop();
   }
 
   function windowResized() {
